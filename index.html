@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Document</title>
+</head>
+<style>
+   canvas {
+	   border: 5px solid purple;
+   }
+</style>
+<body>
+<canvas id="drawingCanvas" width="800" height="600">
+</canvas>
+</body>
+<script>
+// const cnv = document.querySelector('canvas')
+const cnv = document.getElementById('drawingCanvas');
+const ctx = cnv.getContext('2d');	
+
+// cnv.width = window.innerWidth;
+// cnv.height = window.innerHeight;
+
+cnv.width = 800;
+cnv.height = 600;
+
+ctx.font = '64px monospace'
+
+let keys = [];
+
+document.addEventListener('keydown', (event) => {
+	keys[event.code] = true;
+})
+
+document.addEventListener('keyup', (event) => {
+	keys[event.code] = false;
+})
+
+let isGameOver = false;
+
+ctx.fillStyle = 'purple'
+
+
+const gameOver = function() {
+	ctx.fillStyle = '#eeeeee';
+	ctx.fillRect(0, 0, cnv.width, cnv.height);
+
+	ctx.fillStyle = '#000000';
+	ctx.fillRect(cnv.width / 2 - 150,
+		cnv.height / 2 -50,
+		300,
+		100)
+}
+
+const collides = (a, b) => {
+	return a.x < b.x + b.width
+	&& a.x + a.width > b.x
+	&& a.y < b.y + b.height
+	&& a.y + a.height > b.y
+}
+
+const randomCoordinate =
+		(border) => parseInt(Math.random() * (border - 20) + 10);
+
+const randomX = () => randomCoordinate(cnv.width);
+const randomY = () => randomCoordinate(cnv.height);
+ 
+const apple = {
+	x: parseInt(Math.random() * (cnv.width - 20) + 10),
+	y: parseInt(Math.random() * (cnv.height - 20) + 10),
+	width: 7.5,
+	height: 7.5,
+	radius: 6,
+	collect: function(player) {
+		// Здесь будет проверка совпадения игрока и яблока
+		if (collides(player, apple)) {
+			this.x = randomX();
+			this.y = randomY();
+			player.score++ ; 
+			player.length++ ; 
+		}
+		ctx.beginPath();
+		ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2)
+		ctx.fill();
+	},
+	}
+
+	const change = function(coor, altCoor) {
+		let mem = altCoor;
+
+	}
+
+
+const player = {
+	x: 0,
+	y: 0,
+	width: 20,
+	height: 20,
+	speed: 20,
+	dx: 20,
+	dy: 0,
+	score: 0,
+	segments: [],
+	length: 3,
+	move: function() {
+		// this.x += this.speed;
+		// this.y += this.speed;
+		if(keys['KeyW']){
+			this.dx = 0;
+			this.dy = -20;
+		} 
+		if(keys['KeyS']){
+			this.dx = 0;
+			this.dy = 20;
+		} 
+		if(keys['KeyD']){
+			this.dx = 20;
+			this.dy = 0;
+		}
+		if(keys['KeyA']){
+			this.dx = -20;
+			this.dy = 0;
+		} 
+
+		this.x += this.dx;
+		this.y += this.dy;
+
+		this.segments.unshift({x: this.x, y: this.y,
+			width: this.width, height: this.height});
+
+		if (this.segments.length > this.length) {
+			this.segments.pop();
+		}
+
+		ctx.fillText('Количество очков: ' + this.score, 5, 50)
+
+		// ctx.fillRect(this.x, this.y, this.width, this.height);
+
+		for (let i = 1; i < this.length; i++) {
+			ctx.fillRect(this.segments[i].x, 
+						this.segments[i].y, 
+						this.width - 1, 
+						this.height - 1);
+			
+			if (collides(this, this.segments[i])
+				&& !isGameOver) {
+				isGameOver = true
+			}
+		}
+		if (this.x > cnv.width) {
+			this.x = 0
+		} else if (this.x < 0) {
+			this.x = cnv.width;
+		}
+		if (this.y > cnv.width) {
+			this.y = 0
+		} else if (this.y < 0) {
+			this.y = cnv.width;
+		}
+	},
+}
+
+let frame = 0
+
+const mainloop = () => {
+	if (!isGameOver) {
+	requestAnimationFrame(mainloop);
+	frame += 1;
+	if (frame < 10) return;
+	frame = 0
+	ctx.clearRect(0, 0, cnv.width, cnv.height);
+    player.move();
+    apple.collect(player);	
+    } else {
+    	gameOver();
+    }
+}
+
+requestAnimationFrame(mainloop);
+</script>
+</html>
